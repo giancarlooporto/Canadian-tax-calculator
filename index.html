@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Canadian Tax Calculator 2025 by Province</title>
+  <meta name="description" content="Free 2025 Canadian Income Tax Calculator by Province – Estimate your federal and provincial taxes quickly and accurately with charts and breakdowns.">
+  <meta name="keywords" content="Canada tax calculator 2025, provincial tax, income tax calculator, Canadian federal tax, calculate taxes Canada">
+  <meta name="author" content="Your Brand">
+  <link rel="icon" href="/favicon.ico">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gradient-to-r from-blue-50 to-blue-100 text-gray-900 min-h-screen flex items-center justify-center">
+  <div class="max-w-5xl w-full mx-auto p-6">
+    <header class="text-center mb-8">
+      <h1 class="text-4xl md:text-5xl font-extrabold text-blue-700 drop-shadow">Canadian Income Tax Calculator 2025</h1>
+      <p class="text-gray-700 mt-3 text-lg">Estimate your federal and provincial/territorial income taxes for 2025, view detailed breakdowns, and visualize your results instantly.</p>
+    </header>
+
+    <div class="bg-white shadow-lg rounded-2xl p-6 mb-6 border border-gray-200">
+      <label class="block mb-2 font-medium text-gray-800">Annual Income ($)</label>
+      <input id="income" type="number" class="w-full border rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400" placeholder="Enter your taxable income">
+
+      <label class="block mb-2 font-medium text-gray-800">Province or Territory</label>
+      <select id="province" class="w-full border rounded-lg p-3 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400">
+        <option value="federal">Federal Only</option>
+        <option value="alberta">Alberta</option>
+        <option value="britishcolumbia">British Columbia</option>
+        <option value="manitoba">Manitoba</option>
+        <option value="newbrunswick">New Brunswick</option>
+        <option value="newfoundland">Newfoundland and Labrador</option>
+        <option value="novascotia">Nova Scotia</option>
+        <option value="ontario">Ontario</option>
+        <option value="princeedwardisland">Prince Edward Island</option>
+        <option value="quebec">Quebec</option>
+        <option value="saskatchewan">Saskatchewan</option>
+        <option value="northwestterritories">Northwest Territories</option>
+        <option value="nunavut">Nunavut</option>
+        <option value="yukon">Yukon</option>
+      </select>
+
+      <button onclick="calculateTax()" class="bg-blue-600 hover:bg-blue-700 transition text-white font-semibold px-6 py-3 rounded-xl shadow-md w-full">Calculate Taxes</button>
+    </div>
+
+    <div id="results" class="hidden bg-white mt-6 shadow-lg rounded-2xl p-6 border border-gray-200">
+      <h2 class="text-2xl font-bold mb-4 text-blue-700">Results</h2>
+      <div class="grid md:grid-cols-2 gap-4">
+        <div>
+          <p id="federalTax" class="text-lg"></p>
+          <p id="provincialTax" class="text-lg"></p>
+          <p id="totalTax" class="text-lg font-semibold"></p>
+          <p id="netIncome" class="text-lg font-semibold"></p>
+          <p id="effectiveRate" class="text-lg"></p>
+        </div>
+        <div>
+          <canvas id="taxChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const federalBrackets = [
+      { upTo: 57375, rate: 0.145 },
+      { upTo: 114750, rate: 0.205 },
+      { upTo: 177882, rate: 0.26 },
+      { upTo: 253414, rate: 0.29 },
+      { upTo: Infinity, rate: 0.33 }
+    ];
+
+    const provincialBrackets = {
+      alberta: [{upTo:148269,rate:0.10},{upTo:177922,rate:0.12},{upTo:237230,rate:0.13},{upTo:355845,rate:0.14},{upTo:Infinity,rate:0.15}],
+      britishcolumbia: [{upTo:47937,rate:0.0506},{upTo:95875,rate:0.077},{upTo:110076,rate:0.105},{upTo:133664,rate:0.1229},{upTo:181232,rate:0.147},{upTo:252752,rate:0.168},{upTo:Infinity,rate:0.205}],
+      manitoba: [{upTo:36842,rate:0.108},{upTo:79625,rate:0.1275},{upTo:Infinity,rate:0.174}],
+      newbrunswick: [{upTo:50000,rate:0.0968},{upTo:100000,rate:0.1482},{upTo:150000,rate:0.1652},{upTo:Infinity,rate:0.20}],
+      newfoundland: [{upTo:41757,rate:0.087},{upTo:83515,rate:0.145},{upTo:148027,rate:0.158},{upTo:207239,rate:0.173},{upTo:Infinity,rate:0.183}],
+      novascotia: [{upTo:29590,rate:0.0879},{upTo:59180,rate:0.1495},{upTo:93000,rate:0.1667},{upTo:150000,rate:0.175},{upTo:Infinity,rate:0.21}],
+      ontario: [{upTo:52886,rate:0.0505},{upTo:105775,rate:0.0915},{upTo:150000,rate:0.1116},{upTo:220000,rate:0.1216},{upTo:Infinity,rate:0.1316}],
+      princeedwardisland: [{upTo:31984,rate:0.098},{upTo:63969,rate:0.138},{upTo:Infinity,rate:0.167}],
+      quebec: [{upTo:51780,rate:0.14},{upTo:103545,rate:0.19},{upTo:126000,rate:0.24},{upTo:Infinity,rate:0.2575}],
+      saskatchewan: [{upTo:50997,rate:0.105},{upTo:145755,rate:0.125},{upTo:Infinity,rate:0.145}],
+      northwestterritories: [{upTo:48426,rate:0.059},{upTo:96855,rate:0.086},{upTo:157139,rate:0.122},{upTo:Infinity,rate:0.1405}],
+      nunavut: [{upTo:53148,rate:0.04},{upTo:106296,rate:0.07},{upTo:172211,rate:0.09},{upTo:Infinity,rate:0.115}],
+      yukon: [{upTo:57375,rate:0.064},{upTo:114750,rate:0.09},{upTo:177882,rate:0.109},{upTo:253414,rate:0.128},{upTo:Infinity,rate:0.15}]
+    };
+
+    function calculateBracketTax(income, brackets) {
+      let tax = 0;
+      let lastLimit = 0;
+      for (let b of brackets) {
+        if (income > b.upTo) {
+          tax += (b.upTo - lastLimit) * b.rate;
+          lastLimit = b.upTo;
+        } else {
+          tax += (income - lastLimit) * b.rate;
+          break;
+        }
+      }
+      return tax;
+    }
+
+    let chart;
+    function formatNumber(num) {
+      return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function calculateTax() {
+      const income = parseFloat(document.getElementById('income').value);
+      const province = document.getElementById('province').value;
+
+      if (isNaN(income) || income <= 0) {
+        alert('Please enter a valid income.');
+        return;
+      }
+
+      const federalTax = calculateBracketTax(income, federalBrackets);
+      const provincialTax = province !== 'federal' ? calculateBracketTax(income, provincialBrackets[province]) : 0;
+      const totalTax = federalTax + provincialTax;
+      const netIncome = income - totalTax;
+      const effectiveRate = ((totalTax / income) * 100).toFixed(2);
+
+      document.getElementById('federalTax').innerText = `Federal Tax: $${formatNumber(federalTax)}`;
+      document.getElementById('provincialTax').innerText = `Provincial/Territorial Tax: $${formatNumber(provincialTax)}`;
+      document.getElementById('totalTax').innerText = `Total Tax: $${formatNumber(totalTax)}`;
+      document.getElementById('netIncome').innerText = `Net Income: $${formatNumber(netIncome)}`;
+      document.getElementById('effectiveRate').innerText = `Effective Tax Rate: ${effectiveRate}%`;
+
+      document.getElementById('results').classList.remove('hidden');
+
+      const ctx = document.getElementById('taxChart').getContext('2d');
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Federal Tax', 'Provincial Tax', 'Net Income'],
+          datasets: [{
+            data: [federalTax, provincialTax, netIncome],
+            backgroundColor: ['#2563eb', '#16a34a', '#facc15']
+          }]
+        },
+        options: {
+          responsive: true
+        }
+      });
+    }
+  </script>
+</body>
+</html>
